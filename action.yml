@@ -1,0 +1,28 @@
+name: 'Get Run ID of Parallel Workflow'
+description: 'Finds run-id of workflow triggered by the same action'
+author: 'MahdiBM'
+inputs:
+  token:
+    description: 'Token to use for authentication'
+    default: '${{ github.token }}'
+    required: false
+  repository:
+    description: 'Repository to restore cache from'
+    default: '${{ github.repository }}'
+    required: false
+  workflow_name:
+    description: "Workflow name you're after"
+    required: true
+outputs:
+  run_id:
+    description: 'Run id of the target workflow'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  entrypoint: 'entrypoint.sh'
+
+
+# branding:
+#   icon: 'archive'
+#   color: 'gray-dark'
