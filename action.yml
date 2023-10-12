@@ -19,7 +19,7 @@ outputs:
 
 runs:
   using: 'docker'
-  image: 'Dockerfile'
+  image: 'ubuntu:latest'
   entrypoint: 'entrypoint.sh'
 
 
