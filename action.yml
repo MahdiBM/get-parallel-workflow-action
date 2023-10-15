@@ -22,6 +22,7 @@ inputs:
 outputs:
   run_id:
     description: 'Run id of the target workflow'
+    value: ${{ steps.find-workflow.outputs.run_id }}
 
 runs:
   using: 'composite'
@@ -58,6 +59,7 @@ runs:
         }
 
     - name: Find workflow
+      id: find-workflow
       shell: bash
       run: |
         echo "run_id=$(
