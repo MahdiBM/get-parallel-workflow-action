@@ -1,28 +1,73 @@
 name: 'Get Run ID of Parallel Workflow'
+
 description: 'Finds run-id of workflow triggered by the same action'
+
 author: 'MahdiBM'
+
 inputs:
   token:
     description: 'Token to use for authentication'
     default: '${{ github.token }}'
     required: false
+
   repository:
     description: 'Repository to restore cache from'
     default: '${{ github.repository }}'
     required: false
+
   workflow_name:
     description: "Workflow name you're after"
     required: true
+
 outputs:
   run_id:
     description: 'Run id of the target workflow'
 
 runs:
-  using: 'docker'
-  image: 'docker://ubuntu:latest'
-  entrypoint: 'entrypoint.sh'
+  using: 'composite'
 
+  steps:
+    - name: Install jq
+      shell: bash
+      run: |
+        command -v jq >/dev/null || {
+          if command -v apt-get >/dev/null; then
+            apt-get update -q
+            apt-get install -qy jq
+          elif command -v yum >/dev/null; then
+            yum install -y jq
+          else
+            echo "jq is not installed and we couldn't figure out how to install it."
+            exit 1
+          fi
+        }
 
-# branding:
-#   icon: 'archive'
-#   color: 'gray-dark'
+    - name: Install curl
+      shell: bash
+      run: |
+        command -v curl >/dev/null || {
+          if command -v apt-get >/dev/null; then
+            apt-get update -q
+            apt-get install -qy curl
+          elif command -v yum >/dev/null; then
+            yum install -y curl
+          else
+            echo "curl is not installed and we couldn't figure out how to install it."
+            exit 1
+          fi
+        }
+
+    - name: Find workflow
+      shell: bash
+      run: |
+        echo "run_id=$(
+          curl -sL \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: BEARER ${{ inputs.token }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${{ inputs.repository }}/actions/runs | \
+          jq '.workflow_runs' | \
+          jq 'map(select(.head_sha == "${{ github.event.head_commit.id }}" or .head_sha == "${{ github.event.pull_request.head.sha }}"))' | \
+          jq 'map(select(.name == "${{ inputs.workflow_name }}"))' | \
+          jq '.[0].id'
+        )" >> $GITHUB_OUTPUT
