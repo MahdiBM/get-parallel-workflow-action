@@ -14,8 +14,8 @@ inputs:
     default: "${{ github.repository }}"
     required: false
 
-  workflow_name:
-    description: "Workflow name you're after"
+  name:
+    description: "Name of the workflow you're after"
     required: true
 
 outputs:
@@ -69,6 +69,6 @@ runs:
             https://api.github.com/repos/${{ inputs.repository }}/actions/runs | \
           jq '.workflow_runs' | \
           jq 'map(select(.head_sha == "${{ github.event.head_commit.id }}" or .head_sha == "${{ github.event.pull_request.head.sha }}"))' | \
-          jq 'map(select(.name == "${{ inputs.workflow_name }}"))' | \
+          jq 'map(select(.name == "${{ inputs.name }}"))' | \
           jq '.[0].id'
         )" >> $GITHUB_OUTPUT
