@@ -1,18 +1,17 @@
-name: 'Get Run ID of Parallel Workflow'
+name: "Get Run ID of Parallel Workflow"
 
-description: 'Finds run-id of workflow triggered by the same action'
+description: "Finds run-id of workflow triggered by the same action"
 
-author: 'MahdiBM'
+author: "MahdiBM"
 
 inputs:
   token:
-    description: 'Token to use for authentication'
-    default: '${{ github.token }}'
-    required: false
+    description: "Personal Access Token (PAT) to use for authentication. Not the 'GITHUB_TOKEN'"
+    required: true
 
   repository:
-    description: 'Repository to restore cache from'
-    default: '${{ github.repository }}'
+    description: "Repository to restore cache from"
+    default: "${{ github.repository }}"
     required: false
 
   workflow_name:
@@ -21,11 +20,11 @@ inputs:
 
 outputs:
   run_id:
-    description: 'Run id of the target workflow'
+    description: "Run id of the target workflow"
     value: ${{ steps.find_workflow.outputs.run_id }}
 
 runs:
-  using: 'composite'
+  using: "composite"
 
   steps:
     - name: Install jq
@@ -62,7 +61,7 @@ runs:
       id: find_workflow
       shell: bash
       run: |
-        "run_id=$(
+        echo "run_id=$(
           curl -sL \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: BEARER ${{ inputs.token }}" \
@@ -72,10 +71,4 @@ runs:
           jq 'map(select(.head_sha == "${{ github.event.head_commit.id }}" or .head_sha == "${{ github.event.pull_request.head.sha }}"))' | \
           jq 'map(select(.name == "${{ inputs.workflow_name }}"))' | \
           jq '.[0].id'
-        )"
-        output="::set-output name=run_id::$run_id"
-
-    - name: Echo run_id
-      shell: bash
-      run: |
-        echo "run_id: ${{ steps.find_workflow.outputs.run_id }}"
+        )" >> $GITHUB_OUTPUT
