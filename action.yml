@@ -22,7 +22,7 @@ inputs:
 outputs:
   run_id:
     description: 'Run id of the target workflow'
-    value: ${{ steps.find-workflow.outputs.run_id }}
+    value: ${{ steps.find_workflow.outputs.run_id }}
 
 runs:
   using: 'composite'
@@ -59,10 +59,10 @@ runs:
         }
 
     - name: Find workflow
-      id: find-workflow
+      id: find_workflow
       shell: bash
       run: |
-        echo "run_id=$(
+        "run_id=$(
           curl -sL \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: BEARER ${{ inputs.token }}" \
@@ -72,4 +72,10 @@ runs:
           jq 'map(select(.head_sha == "${{ github.event.head_commit.id }}" or .head_sha == "${{ github.event.pull_request.head.sha }}"))' | \
           jq 'map(select(.name == "${{ inputs.workflow_name }}"))' | \
           jq '.[0].id'
-        )" >> $GITHUB_OUTPUT
+        )"
+        output="::set-output name=run_id::$run_id"
+
+    - name: Echo run_id
+      shell: bash
+      run: |
+        echo "run_id: ${{ steps.find_workflow.outputs.run_id }}"
